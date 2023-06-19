@@ -1,13 +1,17 @@
 #include "transport_catalogue.h"
 
-Stop::Stop(std::string name, double x, double y)
+Stop::Stop(std::string name, Coordinates coordinates)
 	: stop_name(std::move(name))
-	, latitude(x)
-	, longitude(y)
+	, coordinates(std::move(coordinates))
+{}
+
+Stop::Stop(std::string name, double latitude, double longitude)
+	: stop_name(std::move(name))
+	, coordinates(std::move(Coordinates(latitude, longitude)))
 {}
 
 bool Stop::operator==(const Stop& other) const {
-	return stop_name == other.stop_name && latitude == other.latitude && longitude == other.longitude;
+	return stop_name == other.stop_name && coordinates == other.coordinates;
 }
 
 bool Stop::operator!=(const Stop& other) const {
@@ -33,8 +37,8 @@ size_t PairHasher::operator()(std::pair<Stop*, Stop*> obj) const {
 }
 
 //Adds information about stop (stop name, stop coordinates)
-void TransportCatalogue::AddStop(Stop bus_stop) {
-	bus_stops_.push_back(std::move(bus_stop));
+void TransportCatalogue::AddStop(const Stop& bus_stop) {
+	bus_stops_.push_back(bus_stop);
 	auto& last_added_stop = bus_stops_.back();
 	bus_stops_index_[last_added_stop.stop_name] = &last_added_stop;
 	route_to_stops_index_[last_added_stop.stop_name] = {};
@@ -55,8 +59,8 @@ void TransportCatalogue::AddBus(const std::string& route_name, RouteType type, c
 	return;
 }
 
-//Adds distance value betwenn two stops with names stop1 and stop2
-void TransportCatalogue::AddDistance(std::string_view stop1, std::string_view stop2, double distance) {
+//Sets distance value betwenn two stops with names stop1 and stop2
+void TransportCatalogue::SetDistance(std::string_view stop1, std::string_view stop2, double distance) {
 	stops_distance_index_[{std::move(FindStop(stop1)), std::move(FindStop(stop2))}] = distance;
 	return;
 }
@@ -73,8 +77,7 @@ std::optional<BusInfo> TransportCatalogue::GetBusInfo(std::string_view route_nam
 	for (size_t index = 0; index < end_index - 1; ++index) {
 		auto from_stop = FindStop(route_stops->at(index)->stop_name);
 		auto to_stop = FindStop(route_stops->at(index + 1)->stop_name);
-		coordinate_distance += ComputeDistance({ from_stop->latitude, from_stop->longitude },
-			                                   { to_stop->latitude, to_stop->longitude });
+		coordinate_distance += ComputeDistance(from_stop->coordinates, to_stop->coordinates);
 		real_distance += ComputeRealDistance(from_stop, to_stop, route_type);
 		unique_stops.insert(to_stop->stop_name);
 	}
@@ -91,10 +94,6 @@ std::optional<std::set<std::string>> TransportCatalogue::GetStopInfo(std::string
 		return {};
 	}
 	return route_to_stops_index_.at(stop_name);
-}
-
-std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher> TransportCatalogue::GetDistancesIndex() const {
-	return stops_distance_index_;
 }
 
 //Returns information (as pointer) about particular stop (stop name and coordinates)

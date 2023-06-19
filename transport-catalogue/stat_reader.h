@@ -24,8 +24,8 @@ private:
 
 	std::vector<std::pair<OutRequestType, std::string>> requests_query_;
 
-	void PrintRouteRequestResult(TransportCatalogue&, const std::string&) const;
-	void PrintStopRequestResult(TransportCatalogue&, const std::string&) const;
+	void PrintRouteRequestResult(TransportCatalogue&, const std::string& request) const;
+	void PrintStopRequestResult(TransportCatalogue&, const std::string& request) const;
 
 };
 

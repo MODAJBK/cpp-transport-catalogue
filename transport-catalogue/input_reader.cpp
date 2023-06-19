@@ -57,15 +57,14 @@ void InputReader::AddRequestToQuery(std::string_view request) {
 //Parsing ADD_STOP request
 //Format of ADD_STOP request: "<stop_name>, <latitude>, <longitude>"
 void InputReader::ParseAddStop(TransportCatalogue& catalogue, std::string_view line) const {
-	Stop bus_stop;
 	size_t end_of_field = line.find(','); //stop name separates with coordinates by comma symbol
-	bus_stop.stop_name = std::move(line.substr(0, end_of_field));
+	std::string stop_name = std::move(std::string(line.substr(0, end_of_field)));
 	line.remove_prefix(end_of_field + 1); //+1 need to remove comma symbol
 	end_of_field = line.find_last_of(' '); //digits separate with space symbol
-	bus_stop.latitude = std::stod(std::string(line.substr(0, end_of_field)));
+	double latitude = std::stod(std::string(line.substr(0, end_of_field)));
 	line.remove_prefix(end_of_field + 1); //+1 need to remove space symbol
-	bus_stop.longitude = std::stod(std::string(line));
-	catalogue.AddStop(bus_stop);
+	double longitude = std::stod(std::string(line));
+	catalogue.AddStop(std::move(Stop(stop_name, latitude, longitude)));
 	return;
 }
 
@@ -83,7 +82,7 @@ void InputReader::ParseAddDistance(TransportCatalogue& catalogue, std::string_vi
 		end_of_field = line.find(','); //distances between stops divide with comma symbol
 		stop_name2 = std::move(line.substr(0, end_of_field));
 		line.remove_prefix(end_of_field + 2); //+2 need to remove comma and space symbols
-		catalogue.AddDistance(stop_name, stop_name2, distance);
+		catalogue.SetDistance(stop_name, stop_name2, distance);
 	}
 	return;
 }

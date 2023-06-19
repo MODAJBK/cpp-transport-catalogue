@@ -20,15 +20,15 @@ public:
 	void ParseReqestst(std::istream&);
 	void CompleteRequests(TransportCatalogue&);
 
-	void ParseAddStop(TransportCatalogue&, std::string_view) const;
-	void ParseAddDistance(TransportCatalogue&, std::string_view) const;
-	void ParseAddBus(TransportCatalogue&, std::string_view) const;
+	void ParseAddStop(TransportCatalogue&, std::string_view request) const;
+	void ParseAddDistance(TransportCatalogue&, std::string_view request) const;
+	void ParseAddBus(TransportCatalogue&, std::string_view request) const;
 
 private:
 
 	std::vector<std::pair<InRequestType, std::string>> request_query_;
 
-	void AddRequestToQuery(std::string_view);
+	void AddRequestToQuery(std::string_view request);
 
 };
 

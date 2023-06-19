@@ -17,29 +17,29 @@
 #include "geo.h"
 
 enum class RouteType {
-	LINER_ROUTE,
+    LINER_ROUTE,
     RING_ROUTE,
 };
 
 struct Stop {
 
 	Stop() = default;
-	explicit Stop(std::string, double, double);
+	explicit Stop(std::string name, Coordinates coordinates);
+	explicit Stop(std::string name, double latitude, double longitude);
 
 	bool operator==(const Stop&) const;
 
 	bool operator!=(const Stop&) const;
 
 	std::string stop_name;
-	double latitude = 0;
-	double longitude = 0;
+	Coordinates coordinates;
 
 };
 
 struct Bus {
 
 	Bus() = default;
-	explicit Bus(std::string, RouteType, std::vector<Stop*>);
+	explicit Bus(std::string name, RouteType type, std::vector<Stop*> route_stops);
 
 	bool operator==(const Bus&) const;
 
@@ -67,16 +67,15 @@ using RouteInfo = std::pair<std::vector<Stop*>*, RouteType>;
 class TransportCatalogue {
 public:
 
-	void AddStop(Stop);
-	void AddBus(const std::string&, RouteType, const std::vector<std::string_view>&);
-	void AddDistance(std::string_view, std::string_view, double);
+	void AddStop(const Stop& stop);
+	void AddBus(const std::string& route_name, RouteType type, const std::vector<std::string_view>& route_stops);
+	void SetDistance(std::string_view stop1, std::string_view stop2, double distnace);
 
-	std::optional<BusInfo> GetBusInfo(std::string_view) const;
-	std::optional<std::set<std::string>> GetStopInfo(std::string_view) const;
-	std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher> GetDistancesIndex() const;
+	std::optional<BusInfo> GetBusInfo(std::string_view route_name) const;
+	std::optional<std::set<std::string>> GetStopInfo(std::string_view stop_name) const;
 
-	Stop* FindStop(std::string_view) const;
-	RouteInfo FindBus(std::string_view) const;
+	Stop* FindStop(std::string_view stop_name) const;
+	RouteInfo FindBus(std::string_view route_name) const;
 
 private:
 
@@ -87,6 +86,6 @@ private:
 	std::unordered_map<std::string_view, std::set<std::string>> route_to_stops_index_;
 	std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher> stops_distance_index_;
 
-	double ComputeRealDistance(Stop*, Stop*, RouteType) const;
+	double ComputeRealDistance(Stop* stop1, Stop* stop2, RouteType type) const;
 
 };

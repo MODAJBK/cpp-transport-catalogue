@@ -26,8 +26,8 @@ std::vector<std::string_view> VectStringToVectStringView(const std::vector<std::
 
 std::ostream& operator<<(std::ostream& out, const Stop& bus_stops) {
     out << "{"s << bus_stops.stop_name
-        << ", "s << bus_stops.latitude
-        << ", "s << bus_stops.longitude << "}"s;
+        << ", "s << bus_stops.coordinates.lat
+        << ", "s << bus_stops.coordinates.lng << "}"s;
     return out;
 }
 
@@ -67,17 +67,18 @@ void TestBusRouteAdding() {
 void TestStopDistanceAdding() {
     TransportCatalogue catalogue;
     Stop stop1("Krystall"s, 55.611087, 37.20829), stop2("Center"s, 55.595884, 37.209755);
+    std::string route_name = { "36"s };
+    std::vector<std::string> route_stops = { "Krystall"s, "Center"s };
     double distance1 = 1000, distance2 = 1500;
     catalogue.AddStop(stop1);
     catalogue.AddStop(stop2);
-    catalogue.AddDistance(stop1.stop_name, stop2.stop_name, 1000);
-    catalogue.AddDistance(stop2.stop_name, stop1.stop_name, 1500);
-    auto result = catalogue.GetDistancesIndex();
+    catalogue.SetDistance(stop1.stop_name, stop2.stop_name, 1000);
+    catalogue.SetDistance(stop2.stop_name, stop1.stop_name, 1500);
+    catalogue.AddBus(route_name, RouteType::LINER_ROUTE, VectStringToVectStringView(route_stops));
     auto stop_ptr1 = catalogue.FindStop(stop1.stop_name);
     auto stop_ptr2 = catalogue.FindStop(stop2.stop_name);
-    ASSERT_HINT(result.count({ stop_ptr1, stop_ptr2 }), "Error in stop distances adding"s);
-    ASSERT_HINT(result.count({ stop_ptr2, stop_ptr1 }), "Error in stop distances adding"s);
-    ASSERT_EQUAL_HINT(result.at({ stop_ptr1, stop_ptr2 }) + result.at({ stop_ptr2, stop_ptr1 }), distance1 + distance2, "Error in stop distances adding"s);
+    auto [_, __, distance, ___] = catalogue.GetBusInfo(route_name).value();
+    ASSERT_EQUAL_HINT(distance, distance1 + distance2, "Error in stop distances adding"s);
 }
 
 void TestGetBusInfo() {
@@ -98,7 +99,7 @@ void TestGetBusInfo() {
         for (int i = 0; i < route_stops.size() - 1; ++i) {
             auto from_stop = catalogue.FindStop(route_stops[i]);
             auto to_stop = catalogue.FindStop(route_stops[i + 1]);
-            catalogue.AddDistance(from_stop->stop_name, to_stop->stop_name, distances[i]);
+            catalogue.SetDistance(from_stop->stop_name, to_stop->stop_name, distances[i]);
         }
         catalogue.AddBus(route_name, RouteType::RING_ROUTE, VectStringToVectStringView(route_stops));
         auto [stops, unique_stops, distance, curvature] = catalogue.GetBusInfo(route_name).value();
@@ -121,7 +122,7 @@ void TestGetBusInfo() {
         for (int i = 0; i < route_stops.size() - 1; ++i) {
             auto from_stop = catalogue.FindStop(route_stops[i]);
             auto to_stop = catalogue.FindStop(route_stops[i + 1]);
-            catalogue.AddDistance(from_stop->stop_name, to_stop->stop_name, distances[i]);
+            catalogue.SetDistance(from_stop->stop_name, to_stop->stop_name, distances[i]);
         }
         catalogue.AddBus(route_name, std::move(RouteType::LINER_ROUTE), VectStringToVectStringView(route_stops));
         auto [stops, unique_stops, distance, curvature] = catalogue.GetBusInfo(route_name).value();
@@ -164,25 +165,19 @@ void TestParseAddStop() {
 void TestParseAddDistance() {
     TransportCatalogue catalogue;
     InputReader reader;
-    std::string request = { "Marushkino, 9900m to Rasskazovka, 100m to Biryusinka, 5500m to Krystall"s };
+    std::string route_name = { "35"s };
+    std::string request = { "Marushkino, 9900m to Rasskazovka"s };
     std::vector<int> distances = { 0, 9900, 100, 5500 };
     std::vector<std::string> route_stops = { "Marushkino"s,
-                                             "Rasskazovka"s,
-                                             "Biryusinka"s,
-                                             "Krystall"s };
+                                             "Rasskazovka"s };
     for (int i = 0; i < route_stops.size(); ++i) {
         Stop bus_stop(route_stops[i], 55.611087 + static_cast<double>(i), 37.208290 + static_cast<double>(i));
         catalogue.AddStop(std::move(bus_stop));
     }
     reader.ParseAddDistance(catalogue, request);
-    auto result = catalogue.GetDistancesIndex();
-    size_t index = 1;
-    for (const auto& [stops, distance] : result) {
-        auto [from_stop, to_stop] = stops;
-        ASSERT_EQUAL_HINT(from_stop->stop_name, route_stops[0], "Error in ADD_DISTANCE request parsing"s);
-        ASSERT_EQUAL_HINT(to_stop->stop_name, route_stops[index], "Error in ADD_DISTANCE request parsing"s);
-        ASSERT_EQUAL_HINT(distance, distances[index++], "Error in ADD_DISTANCE request parsing"s);
-    }
+    catalogue.AddBus(route_name, RouteType::LINER_ROUTE, VectStringToVectStringView(route_stops));
+    auto [_, __, distance, ___] = catalogue.GetBusInfo(route_name).value();
+    ASSERT_EQUAL_HINT(distance, 9900 * 2, "Error in ADD_DISTANCE request parsing"s);
 }
 
 void TestParseAddBus() {
