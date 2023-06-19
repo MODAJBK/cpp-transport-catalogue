@@ -24,8 +24,6 @@ public:
 	void ParseAddDistance(TransportCatalogue&, std::string_view) const;
 	void ParseAddBus(TransportCatalogue&, std::string_view) const;
 
-	std::vector<std::pair<InRequestType, std::string>> GetRequestQuery() const;
-
 private:
 
 	std::vector<std::pair<InRequestType, std::string>> request_query_;

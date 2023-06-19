@@ -17,20 +17,18 @@
 #include "geo.h"
 
 enum class RouteType {
-
 	LINER_ROUTE,
-	RING_ROUTE,
-
+    RING_ROUTE,
 };
 
-struct Stops {
+struct Stop {
 
-	Stops() = default;
-	explicit Stops(const std::string&, double, double);
+	Stop() = default;
+	explicit Stop(std::string, double, double);
 
-	bool operator==(const Stops&) const;
+	bool operator==(const Stop&) const;
 
-	bool operator!=(const Stops&) const;
+	bool operator!=(const Stop&) const;
 
 	std::string stop_name;
 	double latitude = 0;
@@ -38,20 +36,24 @@ struct Stops {
 
 };
 
-struct Buses {
+struct Bus {
 
-	Buses() = default;
-	explicit Buses(const std::string&, RouteType, const std::vector<Stops*>);
+	Bus() = default;
+	explicit Bus(std::string, RouteType, std::vector<Stop*>);
+
+	bool operator==(const Bus&) const;
+
+	bool operator!=(const Bus&) const;
 
 	std::string route_name;
 	RouteType route_type;
-	std::vector<Stops*> route_stops;
+	std::vector<Stop*> route_stops;
 
 };
 
 struct PairHasher {
 
-	size_t operator()(std::pair<Stops*, Stops*>) const;
+	size_t operator()(std::pair<Stop*, Stop*>) const;
 
 private:
 
@@ -60,31 +62,31 @@ private:
 };
 
 using BusInfo = std::tuple<size_t, size_t, double, double>;
-using RouteInfo = std::pair<std::vector<Stops*>*, RouteType>;
+using RouteInfo = std::pair<std::vector<Stop*>*, RouteType>;
 
 class TransportCatalogue {
 public:
 
-	void AddStop(const Stops& bus_stop);
-	void AddBus(const std::string, RouteType, const std::vector<std::string>&);
-	void AddDistance(const std::string&, const std::string&, int);
+	void AddStop(Stop);
+	void AddBus(const std::string&, RouteType, const std::vector<std::string_view>&);
+	void AddDistance(std::string_view, std::string_view, double);
 
-	std::optional<BusInfo> GetBusInfo(const std::string&) const;
-	std::optional<std::set<std::string>> GetStopInfo(const std::string&) const;
-	std::unordered_map<std::pair<Stops*, Stops*>, int, PairHasher> GetDistancesIndex() const;
+	std::optional<BusInfo> GetBusInfo(std::string_view) const;
+	std::optional<std::set<std::string>> GetStopInfo(std::string_view) const;
+	std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher> GetDistancesIndex() const;
 
-	Stops* FindStop(const std::string&) const;
-	RouteInfo FindBus(const std::string&) const;
+	Stop* FindStop(std::string_view) const;
+	RouteInfo FindBus(std::string_view) const;
 
 private:
 
-	std::deque<Stops> bus_stops_;
-	std::deque<Buses> bus_routes_;
-	std::unordered_map<std::string_view, Stops*> bus_stops_index_;
+	std::deque<Stop> bus_stops_;
+	std::deque<Bus> bus_routes_;
+	std::unordered_map<std::string_view, Stop*> bus_stops_index_;
 	std::unordered_map<std::string_view, RouteInfo> bus_routes_index_;
-	std::unordered_map<std::string, std::set<std::string>> route_to_stops_index_;
-	std::unordered_map<std::pair<Stops*, Stops*>, int, PairHasher> stops_distance_index_;
+	std::unordered_map<std::string_view, std::set<std::string>> route_to_stops_index_;
+	std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher> stops_distance_index_;
 
-	double ComputateDistance(Stops*, Stops*) const;
+	double ComputeRealDistance(Stop*, Stop*, RouteType) const;
 
 };

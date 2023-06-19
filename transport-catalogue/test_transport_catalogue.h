@@ -8,6 +8,7 @@
 #include <set>
 #include <cstdlib>
 #include <iomanip>
+#include <numeric>
 
 #include "transport_catalogue.h"
 #include "input_reader.h"
@@ -113,13 +114,17 @@ std::ostream& operator<<(std::ostream& out, const std::map<Element1, Element2>& 
     return out;
 }
 
-std::ostream& operator<<(std::ostream&, const Stops&);
+std::vector<std::string_view> VectStringToVectStringView(const std::vector<std::string>&);
+
+std::ostream& operator<<(std::ostream&, const Stop&);
+std::ostream& operator<<(std::ostream&, RouteType);
 
 void TestBusStopAdding();
 void TestBusRouteAdding();
+void TestStopDistanceAdding();
 void TestGetBusInfo();
 void TestGetStopInfo();
-void TestParseInputRequest();
 void TestParseAddStop();
 void TestParseAddDistance();
+void TestParseAddBus();
 void TestTransportCatalogue();

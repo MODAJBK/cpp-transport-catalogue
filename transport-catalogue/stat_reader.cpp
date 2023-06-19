@@ -1,5 +1,6 @@
 #include "stat_reader.h"
 
+//Adds output requests from the input stream to query
 void StatReader::ParseOutputReqest(std::istream& input) {
 	int requests_number = 0;
 	std::string line;
@@ -12,6 +13,7 @@ void StatReader::ParseOutputReqest(std::istream& input) {
 	return;
 }
 
+//Completes requests according to the type
 void StatReader::CompleteRequests(TransportCatalogue& catalogue) const {
 	for (const auto& [type, request] : requests_query_) {
 		type == OutRequestType::ROUTE_INFO ? PrintRouteRequestResult(catalogue, request)
@@ -20,6 +22,7 @@ void StatReader::CompleteRequests(TransportCatalogue& catalogue) const {
 	return;
 }
 
+//Prints ROUTE_INFO request data to the output stream
 void StatReader::PrintRouteRequestResult(TransportCatalogue& catalogue, const std::string& line) const {
 	using namespace std::string_literals;
 	auto result = catalogue.GetBusInfo(line);
@@ -36,6 +39,7 @@ void StatReader::PrintRouteRequestResult(TransportCatalogue& catalogue, const st
 	return;
 }
 
+//Prints STOP_INFO request data to the output stream
 void StatReader::PrintStopRequestResult(TransportCatalogue& catalogue, const std::string& line) const {
 	using namespace std::string_literals;
 	auto routes = catalogue.GetStopInfo(line);
@@ -54,6 +58,7 @@ void StatReader::PrintStopRequestResult(TransportCatalogue& catalogue, const std
 	std::cout << '\n';
 }
 
+//Function to process output requests in main()
 void EnterOutPutRequests(TransportCatalogue& catalogue, StatReader& reader) {
 	reader.ParseOutputReqest(std::cin);
 	reader.CompleteRequests(catalogue);
