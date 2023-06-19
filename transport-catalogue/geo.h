@@ -3,11 +3,19 @@
 #include <cmath>
 
 struct Coordinates {
+
+    Coordinates(double x, double y)
+        : lat(x)
+        , lng(y)
+    {}
+
     double lat;
     double lng;
+
     bool operator==(const Coordinates& other) const {
         return lat == other.lat && lng == other.lng;
     }
+
     bool operator!=(const Coordinates& other) const {
         return !(*this == other);
     }
