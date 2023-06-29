@@ -1,36 +1,6 @@
 #include "transport_catalogue.h"
 
-Stop::Stop(std::string name, Coordinates coordinates)
-	: stop_name(std::move(name))
-	, coordinates(std::move(coordinates))
-{}
-
-Stop::Stop(std::string name, double latitude, double longitude)
-	: stop_name(std::move(name))
-	, coordinates(std::move(Coordinates(latitude, longitude)))
-{}
-
-bool Stop::operator==(const Stop& other) const {
-	return stop_name == other.stop_name && coordinates == other.coordinates;
-}
-
-bool Stop::operator!=(const Stop& other) const {
-	return !(*this == other);
-}
-
-Bus::Bus(std::string name, RouteType type, std::vector<Stop*> stops)
-	: route_name(std::move(name))
-	, route_type(type)
-	, route_stops(std::move(stops))
-{}
-
-bool Bus::operator==(const Bus& other) const {
-	return route_name == other.route_name && route_type == other.route_type && route_stops == other.route_stops;
-}
-
-bool Bus::operator!=(const Bus& other) const {
-	return !(*this == other);
-}
+using namespace geo;
 
 size_t PairHasher::operator()(std::pair<Stop*, Stop*> obj) const {
 	return ptr_hasher(obj.first) + 37 * ptr_hasher(obj.second);
@@ -51,6 +21,7 @@ void TransportCatalogue::AddBus(const std::string& route_name, RouteType type, c
 	std::for_each(stops.begin(), stops.end(),
 		          [&](std::string_view stop_name) {
 			          auto stop = FindStop(stop_name);
+					  coordinates_.push_back(stop->coordinates);
 			          route_to_stops_index_[stop->stop_name].insert(route_name);
 			          bus_stops.push_back(std::move(stop));});
 	Bus bus_route(route_name, type, bus_stops);
@@ -96,6 +67,11 @@ std::optional<std::set<std::string>> TransportCatalogue::GetStopInfo(std::string
 	return route_to_stops_index_.at(stop_name);
 }
 
+//Returns vector with stops coordinates
+std::vector<geo::Coordinates> TransportCatalogue::GetCoordinates() const {
+	return coordinates_;
+}
+
 //Returns information (as pointer) about particular stop (stop name and coordinates)
 Stop* TransportCatalogue::FindStop(std::string_view stop) const {
 	assert(bus_stops_index_.count(stop));
@@ -112,7 +88,8 @@ RouteInfo TransportCatalogue::FindBus(std::string_view route_name) const {
 double TransportCatalogue::ComputeRealDistance(Stop* stop1, Stop* stop2, RouteType type) const {
 	double result = 0;
 	if (type == RouteType::LINER_ROUTE) {
-		result += stops_distance_index_.at({ stop1, stop2 });
+		stops_distance_index_.count({ stop1, stop2 }) ? result += stops_distance_index_.at({ stop1, stop2 })
+			                                          : result += stops_distance_index_.at({ stop2, stop1 });
 		stops_distance_index_.count({ stop2, stop1 }) ? result += stops_distance_index_.at({ stop2, stop1 })
 			                                          : result *= 2;
 	}

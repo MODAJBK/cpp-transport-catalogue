@@ -1,12 +1,10 @@
 #include "test_transport_catalogue.h"
+#include "transport_catalogue.h"
+#include "request_handler.h"
 
 int main(){
 	//TestTransportCatalogue();
-	
 	TransportCatalogue catalogue;
-	InputReader reader;
-	StatReader out_reader;
-	EnterInputRequests(catalogue, reader);
-	EnterOutPutRequests(catalogue, out_reader);
-	
+	RequestHandler handler;
+	EnterRequestAndGetReply(catalogue, handler);
 }

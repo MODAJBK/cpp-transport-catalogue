@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -10,9 +11,9 @@
 #include <iomanip>
 #include <numeric>
 
+#include "domain.h"
 #include "transport_catalogue.h"
-#include "input_reader.h"
-#include "stat_reader.h"
+#include "json_reader.h"
 
 template<typename Element1, typename Element2>
 std::ostream& operator<<(std::ostream& out, const std::pair<Element1, Element2>& container);
@@ -117,14 +118,15 @@ std::ostream& operator<<(std::ostream& out, const std::map<Element1, Element2>& 
 std::vector<std::string_view> VectStringToVectStringView(const std::vector<std::string>&);
 
 std::ostream& operator<<(std::ostream&, const Stop&);
+std::ostream& operator<<(std::ostream&, const StatRequest&);
 std::ostream& operator<<(std::ostream&, RouteType);
+
+json::Document LoadJSON(const std::string& s);
 
 void TestBusStopAdding();
 void TestBusRouteAdding();
 void TestStopDistanceAdding();
 void TestGetBusInfo();
 void TestGetStopInfo();
-void TestParseAddStop();
-void TestParseAddDistance();
-void TestParseAddBus();
+void TestRequestParsing();
 void TestTransportCatalogue();
