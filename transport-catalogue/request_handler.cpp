@@ -12,7 +12,7 @@ void RequestHandler::GetRequestData(std::istream& input) {
 
 void RequestHandler::CompleteInputRequests(TransportCatalogue& catalogue) {
 	std::partition(base_requests_.begin(), base_requests_.end(),
-		[](const auto& request) {return std::holds_alternative<BaseRequestStop>(request); });
+		           [](const auto& request) {return std::holds_alternative<BaseRequestStop>(request); });
 	for (const auto& request : base_requests_) {
 		if (std::holds_alternative<BaseRequestStop>(request)) {
 			CompleteAddStop(catalogue, std::get<BaseRequestStop>(request));
@@ -128,52 +128,16 @@ void RequestHandler::PrintDrawMapRequestResult(TransportCatalogue& catalogue,
 }
 
 void RequestHandler::CompleteMapDrawing(TransportCatalogue& catalogue, std::ostream& out) const {
-	size_t color_index = 0;
-	svg::Document doc;
 	auto geo_coords = catalogue.GetCoordinates();
-	SphereProjector proj{
-	   geo_coords.begin(), geo_coords.end(), 
-	   render_settings_.width, render_settings_.height, 
-	   render_settings_.padding
-	};
-	for (const auto route : route_names_) {
-		const auto [stops, type] = catalogue.FindBus(route);
-		if (!stops->empty()) {
-			doc.Add(std::move(GetMapPicture(render_settings_, proj, color_index, stops, type)));
-		}
-	}
-	color_index = 0;
-	for (const auto route : route_names_) {
-		const auto [stops, type] = catalogue.FindBus(route);
-		if (!stops->empty()) {
-			auto [route_name, route_underline] = GetRouteNamePicture(render_settings_, proj, 
-				                                                           color_index,std::string(route), 
-				                                                           stops->at(0)->coordinates);
-			doc.Add(std::move(route_underline));
-			doc.Add(std::move(route_name));
-			if (type == RouteType::LINER_ROUTE && stops->at(0) != stops->at(stops->size() - 1)) {
-				auto [route_name, route_underline] = GetRouteNamePicture(render_settings_, proj, 
-					                                                           color_index, std::string(route), 
-					                                                           stops->at(stops->size() - 1)->coordinates);
-				doc.Add(std::move(route_underline));
-				doc.Add(std::move(route_name));
-			}
-			if (++color_index == render_settings_.color_palette.size()) color_index = 0;
-		}
-	}
-	for (const auto stop : stop_names_) {
-		doc.Add(std::move(GetStopCirclePicture(render_settings_, proj, catalogue.FindStop(stop)->coordinates)));
-	}
-	for (const auto stop : stop_names_) {
-		auto [stop_name, stop_underline] = GetStopNamePicture(render_settings_, proj, std::string(stop), catalogue.FindStop(stop)->coordinates);
-		doc.Add(std::move(stop_underline));
-		doc.Add(std::move(stop_name));
-	}
-	doc.Render(out);
+	MapRender map_render(geo_coords, render_settings_);
+	map_render.DrawRoutes(catalogue, route_names_);
+	map_render.DrawStops(catalogue, stop_names_);
+	map_render.DrawTransportCatalogue(out);
 }
 
-void EnterRequestAndGetReply(TransportCatalogue& catalogue, RequestHandler& handler) {
-	handler.GetRequestData(std::cin);
+void EnterRequestAndGetReply(TransportCatalogue& catalogue, RequestHandler& handler,
+	                         std::istream& in, std::ostream& out) {
+	handler.GetRequestData(in);
 	handler.CompleteInputRequests(catalogue);
-	handler.CompleteOutputRequests(catalogue, std::cout);
+	handler.CompleteOutputRequests(catalogue, out);
 }

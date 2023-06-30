@@ -40,17 +40,9 @@ namespace json {
 
     class Node final :private std::variant<std::nullptr_t, bool, int, double, std::string, Array, Dict> {
     public:
+
         using variant::variant;
         using Value = variant;
-
-        Node() = default;
-        Node(std::nullptr_t);
-        Node(int);
-        Node(double);
-        Node(bool);
-        Node(std::string);
-        Node(Array);
-        Node(Dict);
 
         bool operator==(const Node& rs) const;
         bool operator!=(const Node& rs) const;
@@ -73,8 +65,6 @@ namespace json {
 
         Value GetValue() const;
 
-    private:
-        Value value_;
     };
 
     class Document {

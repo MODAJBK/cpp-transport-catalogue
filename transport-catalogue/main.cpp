@@ -6,5 +6,5 @@ int main(){
 	//TestTransportCatalogue();
 	TransportCatalogue catalogue;
 	RequestHandler handler;
-	EnterRequestAndGetReply(catalogue, handler);
+	EnterRequestAndGetReply(catalogue, handler, std::cin, std::cout);
 }

@@ -42,4 +42,4 @@ private:
 
 };
 
-void EnterRequestAndGetReply(TransportCatalogue&, RequestHandler&);
+void EnterRequestAndGetReply(TransportCatalogue&, RequestHandler&, std::istream&, std::ostream&);

@@ -31,8 +31,8 @@ void TransportCatalogue::AddBus(const std::string& route_name, RouteType type, c
 }
 
 //Sets distance value betwenn two stops with names stop1 and stop2
-void TransportCatalogue::SetDistance(std::string_view stop1, std::string_view stop2, double distance) {
-	stops_distance_index_[{std::move(FindStop(stop1)), std::move(FindStop(stop2))}] = distance;
+void TransportCatalogue::SetDistance(std::string_view from_stop, std::string_view to_stop, double distance) {
+	stops_distance_index_[{std::move(FindStop(from_stop)), std::move(FindStop(to_stop))}] = distance;
 	return;
 }
 

@@ -2,8 +2,10 @@
 
 #include <cmath>
 #include <algorithm>
+#include <memory>
 #include <vector>
 
+#include "transport_catalogue.h"
 #include "geo.h"
 #include "domain.h"
 #include "svg.h"
@@ -35,6 +37,7 @@ bool IsZero(double value);
 
 class SphereProjector {
 public:
+    
     // points_begin и points_end задают начало и конец интервала элементов geo::Coordinates
     template <typename PointInputIt>
     SphereProjector(PointInputIt points_begin, PointInputIt points_end,
@@ -97,14 +100,47 @@ private:
     double zoom_coeff_ = 0;
 };
 
-svg::Polyline GetMapPicture(const RenderSettings&, SphereProjector&, 
-                            size_t&, std::vector<Stop*>*, RouteType);
+class MapRender {
+public:
 
+    template <typename Container>
+    MapRender(const Container& container, RenderSettings settings)
+        : proj_(std::begin(container), std::end(container),
+                settings.width, settings.height,
+                settings.padding)
+        , settings_(std::move(settings))
+    {}
 
-std::pair<svg::Text, svg::Text> GetRouteNamePicture(const RenderSettings&, SphereProjector&, 
-                                                    size_t&, const std::string name, geo::Coordinates);
+    void DrawRoutes(TransportCatalogue&, const std::set<std::string_view> route_names);
+    void DrawStops(TransportCatalogue&, const std::set<std::string_view> stop_names);
 
-svg::Circle GetStopCirclePicture(const RenderSettings&, SphereProjector&, geo::Coordinates);
+    void DrawTransportCatalogue(std::ostream& out);
 
-std::pair<svg::Text, svg::Text> GetStopNamePicture(const RenderSettings&, SphereProjector&,
-                                                   const std::string& name, geo::Coordinates);
+private:
+
+    SphereProjector proj_;
+    RenderSettings settings_;
+    std::vector<svg::Polyline> route_maps_;
+    std::vector<svg::Text> route_names_;
+    std::vector<svg::Circle> stop_dots_;
+    std::vector<svg::Text> stop_names_;
+
+    void GetRouteMapPicture(size_t, RouteType, std::vector<Stop*>*);
+    void GetRouteNamePicture(size_t, const std::string name, geo::Coordinates);
+    void GetStopCirclePicture(geo::Coordinates);
+    void GetStopNamePicture(const std::string& name, geo::Coordinates);
+
+};
+
+template <typename DrawableIterator>
+void DrawPicture(DrawableIterator begin, DrawableIterator end, svg::ObjectContainer& target) {
+    for (auto it = begin; it != end; ++it) {
+        target.Add(std::move(*it));
+    }
+}
+
+template <typename Container>
+void DrawPicture(const Container& container, svg::ObjectContainer& target) {
+    using namespace std;
+    DrawPicture(begin(container), end(container), target);
+}

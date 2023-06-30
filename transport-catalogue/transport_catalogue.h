@@ -35,7 +35,7 @@ public:
 
 	void AddStop(const Stop& stop);
 	void AddBus(const std::string& route_name, RouteType type, const std::vector<std::string_view>& route_stops);
-	void SetDistance(std::string_view stop1, std::string_view stop2, double distnace);
+	void SetDistance(std::string_view from_stop, std::string_view to_stop, double distnace);
 
 	std::optional<BusInfo> GetBusInfo(std::string_view route_name) const;
 	std::optional<std::set<std::string>> GetStopInfo(std::string_view stop_name) const;
