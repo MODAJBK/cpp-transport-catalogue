@@ -164,46 +164,10 @@ void TestGetStopInfo() {
     ASSERT_HINT(!catalogue.GetStopInfo("Empty"s).has_value(), "Error in getting information about stop"s);
 }
 
-void TestRequestParsing() {
-    StatRequest s1(2, OutRequestType::ROUTE_INFO, "114"s),
-                s2(1, OutRequestType::STOP_INFO, "Krystall"s);
-    BaseRequestBus b("114"s, false, { "Zolotoryovo"s, "Krystall"s});
-    const auto json_request = "{\n"
-                              "\"base_requests\": \n["
-                              "{ \"type\": \"Bus\",\n"
-                                "\"name\" : \"114\",\n"
-                                "\"stops\" : [\"Zolotoryovo\", \"Krystall\"] ,\n"
-                                "\"is_roundtrip\" : false },\n"
-                              "{ \"type\" : \"Stop\",\n"
-                                "\"name\" : \"Krystall\",\n"
-                                "\"latitude\" : 43.587795,\n"
-                                "\"longitude\" : 39.716901,\n"
-                                "\"road_distances\" : {\"Zolotoryovo\": 850} },\n"
-                              "{ \"type\": \"Stop\",\n"
-                                 "\"name\" : \"Zolotoryovo\",\n"
-                                 "\"latitude\" : 43.581969,\n"
-                                 "\"longitude\" : 39.719848,\n"
-                                 "\"road_distances\" : {\"Krystall\": 850} } ],\n"
-                              "\"stat_requests\": [\n"
-                              "{ \"id\": 1, \"type\" : \"Stop\", \"name\" : \"Krystall\" },\n"
-                              "{ \"id\": 2, \"type\" : \"Bus\", \"name\" : \"114\" } ]";
-    std::istringstream strm(json_request);
-    auto [input, output, _] = RequestsParsing(strm);
-    auto& add_bus = std::get<BaseRequestBus>(input[0]);
-    auto& add_stop = std::get<BaseRequestStop>(input[1]);
-    auto& add_stop2 = std::get<BaseRequestStop>(input[3]);
-    ASSERT_HINT(output[0].name == s2.name && output[0].id == s2.id, "Error in request parsing"s);
-    ASSERT_HINT(output[1].name == s1.name && output[1].id == s1.id, "Error in request parsing"s);
-    ASSERT_HINT(add_bus.name == b.name && add_bus.stops == b.stops, "Error in request parsing"s);
-    ASSERT_HINT(add_stop.stop_info == Stop("Krystall"s, 43.587795, 39.716901), "Error in request parsing"s);
-    ASSERT_HINT(add_stop2.stop_info == Stop("Zolotoryovo"s, 43.581969, 39.719848), "Error in request parsing"s);
-}
-
 void TestTransportCatalogue() {
     RUN_TEST(TestBusStopAdding);
     RUN_TEST(TestBusRouteAdding);
     RUN_TEST(TestStopDistanceAdding);
     RUN_TEST(TestGetBusInfo);
     RUN_TEST(TestGetStopInfo);
-    RUN_TEST(TestRequestParsing);
 }

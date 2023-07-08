@@ -220,6 +220,10 @@ namespace json {
 
     //------------------------Node------------------------    
 
+    Node::Node(Value value) 
+        : variant(std::move(value)) 
+    {}
+
     bool Node::operator==(const Node& rs) const {
         return this->GetValue() == rs.GetValue();
     }
@@ -228,7 +232,11 @@ namespace json {
         return !(*this == rs);
     }
 
-    Node::Value Node::GetValue() const {
+    const Node::Value& Node::GetValue() const {
+        return *this;
+    }
+
+    Node::Value& Node::GetValue() {
         return *this;
     }
 

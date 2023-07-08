@@ -128,5 +128,4 @@ void TestBusRouteAdding();
 void TestStopDistanceAdding();
 void TestGetBusInfo();
 void TestGetStopInfo();
-void TestRequestParsing();
 void TestTransportCatalogue();

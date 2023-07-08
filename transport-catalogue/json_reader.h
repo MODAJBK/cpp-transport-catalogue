@@ -2,14 +2,17 @@
 
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <vector>
 #include <map>
-#include <tuple>
 #include <variant>
+#include <set>
 
 #include "json.h"
+#include "json_builder.h"
 #include "geo.h"
 #include "domain.h"
+#include "transport_catalogue.h"
 #include "map_renderer.h"
 
 enum class OutRequestType {
@@ -65,15 +68,46 @@ struct StatRequest {
     std::string name;
 };
 
-using BaseRequest = std::variant<BaseRequestStop, BaseRequestDistance, BaseRequestBus>;
-using InputData = std::tuple<std::vector<BaseRequest>, std::vector<StatRequest>, RenderSettings>;
+using DataForDraw = std::tuple<RenderSettings, std::set<std::string_view>, std::set<std::string_view>>;
 
-InputData RequestsParsing(std::istream&);
+class JsonReader {
+public:
 
-BaseRequestBus ParseAddBus(const json::Dict&);
-std::pair<BaseRequestStop, BaseRequestDistance> ParseAddStop(const json::Dict&);
-StatRequest ParseGetBusInfo(const json::Dict&);
-StatRequest ParseGetStopInfo(const json::Dict&);
-StatRequest ParseDrawMap(const json::Dict&);
-RenderSettings ParseRenderSettings(const json::Dict&);
-svg::Color ParseColor(const json::Node&);
+    JsonReader() = default;
+
+    void RequestParsing(std::istream&);
+
+    void CompleteInputRequests(TransportCatalogue&);
+    void CompleteOutputRequests(TransportCatalogue&, const std::string&, std::ostream&) const;
+
+    DataForDraw GetDataForMapDrawing() const;
+
+private:
+
+    std::vector<BaseRequestStop> add_stop_data_;
+    std::vector<BaseRequestDistance> set_distance_data_;
+    std::vector<BaseRequestBus> add_bus_data_;
+    std::vector<StatRequest> stat_requests_data_;
+
+    RenderSettings render_settings_;
+    std::set<std::string_view> stop_names_;
+    std::set<std::string_view> route_names_;
+
+    BaseRequestBus ParseAddBus(const json::Dict&) const;
+    std::pair<BaseRequestStop, BaseRequestDistance> ParseAddStop(const json::Dict&) const;
+    StatRequest ParseGetBusInfo(const json::Dict&) const;
+
+    StatRequest ParseGetStopInfo(const json::Dict&) const;
+    StatRequest ParseDrawMap(const json::Dict&) const;
+
+    RenderSettings ParseRenderSettings(const json::Dict&) const;
+    svg::Color ParseColor(const json::Node&) const;
+
+    void CompleteAddStop(TransportCatalogue&, const BaseRequestStop&) const;
+    void CompleteSetDistance(TransportCatalogue&, const BaseRequestDistance&) const;
+    void CompleteAddBus(TransportCatalogue&, const BaseRequestBus&);
+
+    json::Document GetRouteRequestResult(TransportCatalogue&, const StatRequest&) const;
+    json::Document GetStopRequestResult(TransportCatalogue&, const StatRequest&) const;
+    json::Document GetMapDrawingResult(const std::string&, const StatRequest&) const;
+};
