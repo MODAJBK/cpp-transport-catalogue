@@ -1,10 +1,13 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 
+#include "router.h"
 #include "json_reader.h"
 #include "transport_catalogue.h"
+#include "transport_router.h"
 #include "map_renderer.h"
 
 std::string CompleteMapDrawing(JsonReader&, TransportCatalogue&);

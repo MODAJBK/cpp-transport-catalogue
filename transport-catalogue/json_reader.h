@@ -13,12 +13,14 @@
 #include "geo.h"
 #include "domain.h"
 #include "transport_catalogue.h"
+#include "transport_router.h"
 #include "map_renderer.h"
 
 enum class OutRequestType {
     ROUTE_INFO,
     STOP_INFO,
-    DRAW_MAP
+    DRAW_MAP,
+    GET_ROUTE
 };
 
 struct BaseRequestBus {
@@ -69,6 +71,7 @@ struct StatRequest {
 };
 
 using DataForDraw = std::tuple<RenderSettings, std::set<std::string_view>, std::set<std::string_view>>;
+using DataForRouteBuilding = std::tuple<RoutingSettings, std::set<std::string_view>, std::set<std::string_view>>;
 
 class JsonReader {
 public:
@@ -78,9 +81,10 @@ public:
     void RequestParsing(std::istream&);
 
     void CompleteInputRequests(TransportCatalogue&);
-    void CompleteOutputRequests(TransportCatalogue&, const std::string&, std::ostream&) const;
+    void CompleteOutputRequests(TransportCatalogue&, const RouteBuilder&, const std::string&, std::ostream&) const;
 
     DataForDraw GetDataForMapDrawing() const;
+    DataForRouteBuilding GetDataForRouteBuilding() const;
 
 private:
 
@@ -90,16 +94,19 @@ private:
     std::vector<StatRequest> stat_requests_data_;
 
     RenderSettings render_settings_;
+    RoutingSettings routings_settings_;
     std::set<std::string_view> stop_names_;
     std::set<std::string_view> route_names_;
 
     BaseRequestBus ParseAddBus(const json::Dict&) const;
     std::pair<BaseRequestStop, BaseRequestDistance> ParseAddStop(const json::Dict&) const;
+    
     StatRequest ParseGetBusInfo(const json::Dict&) const;
-
     StatRequest ParseGetStopInfo(const json::Dict&) const;
     StatRequest ParseDrawMap(const json::Dict&) const;
+    StatRequest ParseGetRoute(const json::Dict&) const;
 
+    RoutingSettings ParseRoutingSettings(const json::Dict&) const;
     RenderSettings ParseRenderSettings(const json::Dict&) const;
     svg::Color ParseColor(const json::Node&) const;
 
@@ -110,4 +117,5 @@ private:
     json::Document GetRouteRequestResult(TransportCatalogue&, const StatRequest&) const;
     json::Document GetStopRequestResult(TransportCatalogue&, const StatRequest&) const;
     json::Document GetMapDrawingResult(const std::string&, const StatRequest&) const;
+    json::Document GetRouteBuildingResult(const RouteBuilder&, const StatRequest&) const;
 };

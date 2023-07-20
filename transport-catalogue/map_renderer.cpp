@@ -17,7 +17,7 @@ svg::Point SphereProjector::operator()(geo::Coordinates coords) const {
 //-------------------------MapRender-------------------------
 
 void MapRender::DrawRoutes(TransportCatalogue& catalogue, 
-                           const std::set<std::string_view> route_names) {
+                           const std::set<std::string_view>& route_names) {
     size_t color_index = 0;
     for (const auto route : route_names) {
         const auto [stops, type] = std::move(catalogue.FindBus(route));
@@ -35,7 +35,7 @@ void MapRender::DrawRoutes(TransportCatalogue& catalogue,
 }
 
 void MapRender::DrawStops(TransportCatalogue& catalogue, 
-                          const std::set<std::string_view> stop_names) {
+                          const std::set<std::string_view>& stop_names) {
     for (const auto stop : stop_names) {
         const auto x_y = std::move(catalogue.FindStop(stop)->coordinates);
         GetStopCirclePicture(x_y);

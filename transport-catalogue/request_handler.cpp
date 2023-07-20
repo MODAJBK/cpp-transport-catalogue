@@ -6,7 +6,12 @@ void CompleteInputRequests(JsonReader& json_reader, TransportCatalogue& catalogu
 }
 
 void CompleteOutputRequests(JsonReader& json_reader, TransportCatalogue& catalogue, std::ostream& out) {
-	json_reader.CompleteOutputRequests(catalogue, CompleteMapDrawing(json_reader, catalogue), out);
+	const auto [route_settings, stop_names, route_names] = json_reader.GetDataForRouteBuilding();
+	RouteBuilder route_builder(stop_names.size(), route_settings);
+	route_builder.BuildGraph(catalogue, route_names, stop_names);
+	auto router = std::make_unique<RouteBuilder::TcRouter>(route_builder.GetRouteGraph());
+	route_builder.SetRouter(std::move(router));
+	json_reader.CompleteOutputRequests(catalogue, route_builder, CompleteMapDrawing(json_reader, catalogue), out);
 }
 
 std::string CompleteMapDrawing(JsonReader& json_reader, TransportCatalogue& catalogue) {

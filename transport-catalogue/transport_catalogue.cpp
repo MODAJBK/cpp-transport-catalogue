@@ -59,6 +59,29 @@ std::optional<BusInfo> TransportCatalogue::GetBusInfo(std::string_view route_nam
 	return result;
 }
 
+//Returns the total number of stops
+size_t TransportCatalogue::GetStopsCount() const {
+	return bus_stops_.size();
+}
+
+//Returns the total number of routes
+size_t TransportCatalogue::GetRoutesCount() const {
+	return bus_routes_.size();
+}
+
+//Returns distance(m) between stop_from and stop_to
+double TransportCatalogue::GetDistanceBetweenTwoStops(std::string_view stop_from, 
+	                                                  std::string_view stop_to) const {
+	return GetDistanceBetweenTwoStops(FindStop(stop_from), FindStop(stop_to));
+}
+
+double TransportCatalogue::GetDistanceBetweenTwoStops(Stop* stop_from, Stop* stop_to) const {
+	if (stops_distance_index_.count({ stop_from, stop_to })) {
+		return stops_distance_index_.at({ stop_from, stop_to });
+	}
+	return stops_distance_index_.at({ stop_to, stop_from });
+}
+
 //Returns output information about particular stop (list of routes passing through stop)
 std::optional<std::set<std::string>> TransportCatalogue::GetStopInfo(std::string_view stop_name) const {
 	if (route_to_stops_index_.count(stop_name) == 0) {

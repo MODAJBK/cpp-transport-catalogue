@@ -39,6 +39,10 @@ public:
 
 	std::optional<BusInfo> GetBusInfo(std::string_view route_name) const;
 	std::optional<std::set<std::string>> GetStopInfo(std::string_view stop_name) const;
+	size_t GetStopsCount() const;
+	size_t GetRoutesCount() const;
+	double GetDistanceBetweenTwoStops(std::string_view stop_from, std::string_view stop_to) const;
+	double GetDistanceBetweenTwoStops(Stop* stop_from, Stop* stop_to) const;
 	std::vector<geo::Coordinates> GetCoordinates() const;
 
 	Stop* FindStop(std::string_view stop_name) const;

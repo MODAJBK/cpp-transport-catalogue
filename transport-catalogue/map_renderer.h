@@ -111,8 +111,8 @@ public:
         , settings_(std::move(settings))
     {}
 
-    void DrawRoutes(TransportCatalogue&, const std::set<std::string_view> route_names);
-    void DrawStops(TransportCatalogue&, const std::set<std::string_view> stop_names);
+    void DrawRoutes(TransportCatalogue&, const std::set<std::string_view>& route_names);
+    void DrawStops(TransportCatalogue&, const std::set<std::string_view>& stop_names);
 
     void DrawTransportCatalogue(std::ostream& out);
 
