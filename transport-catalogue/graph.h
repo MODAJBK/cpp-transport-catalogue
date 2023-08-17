@@ -19,12 +19,10 @@ struct Edge {
 
 template <typename Weight>
 class DirectedWeightedGraph {
-private:
+public:
 
     using IncidenceList = std::vector<EdgeId>;
     using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
-
-public:
 
     DirectedWeightedGraph() = default;
     explicit DirectedWeightedGraph(size_t vertex_count);
@@ -34,6 +32,12 @@ public:
     size_t GetEdgeCount() const;
     const Edge<Weight>& GetEdge(EdgeId edge_id) const;
     IncidentEdgesRange GetIncidentEdges(VertexId vertex) const;
+
+    void SetEdges(const std::vector<Edge<Weight>>& edges);
+    void SetIncidenceList(const std::vector<IncidenceList>& incidence_lists);
+
+    const std::vector<Edge<Weight>>& GetEdges() const;
+    const std::vector<IncidenceList>& GetIncidenceLists() const;
 
 private:
 
@@ -68,6 +72,26 @@ size_t DirectedWeightedGraph<Weight>::GetEdgeCount() const {
 template <typename Weight>
 const Edge<Weight>& DirectedWeightedGraph<Weight>::GetEdge(EdgeId edge_id) const {
     return edges_.at(edge_id);
+}
+
+template <typename Weight>
+const std::vector<Edge<Weight>>& DirectedWeightedGraph<Weight>::GetEdges() const {
+    return edges_;
+}
+
+template<typename Weight>
+const std::vector<typename DirectedWeightedGraph<Weight>::IncidenceList>& DirectedWeightedGraph<Weight>::GetIncidenceLists() const {
+    return incidence_lists_;
+}
+
+template<typename Weight>
+void DirectedWeightedGraph<Weight>::SetEdges(const std::vector<Edge<Weight>>& edges) {
+    edges_ = edges;
+}
+
+template<typename Weight>
+void DirectedWeightedGraph<Weight>::SetIncidenceList(const std::vector<IncidenceList>& incidence_lists) {
+    incidence_lists_ = incidence_lists;
 }
 
 template <typename Weight>

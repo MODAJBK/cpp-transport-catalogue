@@ -11,8 +11,8 @@ void TransportCatalogue::AddStop(const Stop& bus_stop) {
 	bus_stops_.push_back(bus_stop);
 	auto& last_added_stop = bus_stops_.back();
 	bus_stops_index_[last_added_stop.stop_name] = &last_added_stop;
+	stop_id_to_ptr_[last_added_stop.stop_id] = &last_added_stop;
 	route_to_stops_index_[last_added_stop.stop_name] = {};
-	return;
 }
 
 //Adds information about bus route (route name and type, list of route stops)
@@ -21,19 +21,36 @@ void TransportCatalogue::AddBus(const std::string& route_name, RouteType type, c
 	std::for_each(stops.begin(), stops.end(),
 		          [&](std::string_view stop_name) {
 			          auto stop = FindStop(stop_name);
-					  coordinates_.push_back(stop->coordinates);
+			          coordinates_.push_back(stop->coordinates);
 			          route_to_stops_index_[stop->stop_name].insert(route_name);
-			          bus_stops.push_back(std::move(stop));});
+			          bus_stops.push_back(std::move(stop)); 
+		          });
 	Bus bus_route(route_name, type, bus_stops);
 	bus_routes_.push_back(std::move(bus_route));
 	bus_routes_index_[bus_routes_.back().route_name] = { &bus_routes_.back().route_stops, type };
-	return;
+}
+
+void TransportCatalogue::AddBus(const std::string& route_name, RouteType type, const std::vector<Stop*>& route_stops) {
+	for (const auto& stop : route_stops) {
+		coordinates_.push_back(stop->coordinates);
+		route_to_stops_index_[stop->stop_name].insert(route_name);
+	}
+	Bus bus_route(route_name, type, route_stops);
+	bus_routes_.push_back(std::move(bus_route));
+	bus_routes_index_[bus_routes_.back().route_name] = { &bus_routes_.back().route_stops, type };
+}
+
+void TransportCatalogue::AddBus(const Bus& route) {
+	AddBus(route.route_name, route.route_type, route.route_stops);
 }
 
 //Sets distance value betwenn two stops with names stop1 and stop2
 void TransportCatalogue::SetDistance(std::string_view from_stop, std::string_view to_stop, double distance) {
 	stops_distance_index_[{std::move(FindStop(from_stop)), std::move(FindStop(to_stop))}] = distance;
-	return;
+}
+
+void TransportCatalogue::SetDistance(Stop* from_stop, Stop* to_stop, double distance) {
+	stops_distance_index_[{ from_stop, to_stop }] = distance;
 }
 
 //Return output information about particular route (total route stops, unique stops, real distance (m) and curvature)
@@ -53,10 +70,22 @@ std::optional<BusInfo> TransportCatalogue::GetBusInfo(std::string_view route_nam
 		unique_stops.insert(to_stop->stop_name);
 	}
 	result = route_type == RouteType::LINER_ROUTE ? std::tuple{ end_index * 2 - 1, unique_stops.size(),
-		                                                        real_distance, real_distance * 1.0 / (coordinate_distance * 2) }
-	                                              : std::tuple{ end_index, unique_stops.size(),
-				                                                real_distance, real_distance * 1.0 / coordinate_distance };
+		real_distance, real_distance * 1.0 / (coordinate_distance * 2) }
+	: std::tuple{ end_index, unique_stops.size(),
+				  real_distance, real_distance * 1.0 / coordinate_distance };
 	return result;
+}
+
+const std::deque<Stop>& TransportCatalogue::GetStops() const {
+	return bus_stops_;
+}
+
+const std::deque<Bus>& TransportCatalogue::GetRoutes() const {
+	return bus_routes_;
+}
+
+const std::unordered_map<std::pair<Stop*, Stop*>, double, PairHasher>& TransportCatalogue::GetDistances() const {
+	return stops_distance_index_;
 }
 
 //Returns the total number of stops
@@ -70,8 +99,8 @@ size_t TransportCatalogue::GetRoutesCount() const {
 }
 
 //Returns distance(m) between stop_from and stop_to
-double TransportCatalogue::GetDistanceBetweenTwoStops(std::string_view stop_from, 
-	                                                  std::string_view stop_to) const {
+double TransportCatalogue::GetDistanceBetweenTwoStops(std::string_view stop_from,
+	std::string_view stop_to) const {
 	return GetDistanceBetweenTwoStops(FindStop(stop_from), FindStop(stop_to));
 }
 
@@ -90,6 +119,24 @@ std::optional<std::set<std::string>> TransportCatalogue::GetStopInfo(std::string
 	return route_to_stops_index_.at(stop_name);
 }
 
+std::set<std::string_view> TransportCatalogue::GetStopNames() const {
+	std::set<std::string_view> stop_names;
+	for (const auto& stop : bus_stops_) {
+		if (!GetStopInfo(stop.stop_name)->empty()) {
+			stop_names.insert(stop.stop_name);
+		}
+	}
+	return stop_names;
+}
+
+std::set<std::string_view> TransportCatalogue::GetRouteNames() const {
+	std::set<std::string_view> route_names;
+	for (const auto& route : bus_routes_) {
+		route_names.insert(route.route_name);
+	}
+	return route_names;
+}
+
 //Returns vector with stops coordinates
 std::vector<geo::Coordinates> TransportCatalogue::GetCoordinates() const {
 	return coordinates_;
@@ -99,6 +146,11 @@ std::vector<geo::Coordinates> TransportCatalogue::GetCoordinates() const {
 Stop* TransportCatalogue::FindStop(std::string_view stop) const {
 	assert(bus_stops_index_.count(stop));
 	return bus_stops_index_.at(stop);
+}
+
+Stop* TransportCatalogue::FindStop(int id) const {
+	assert(stop_id_to_ptr_.count(id));
+	return stop_id_to_ptr_.at(id);
 }
 
 //Returns information about particulaer route (route type and list stops)
@@ -112,13 +164,13 @@ double TransportCatalogue::ComputeRealDistance(Stop* stop1, Stop* stop2, RouteTy
 	double result = 0;
 	if (type == RouteType::LINER_ROUTE) {
 		stops_distance_index_.count({ stop1, stop2 }) ? result += stops_distance_index_.at({ stop1, stop2 })
-			                                          : result += stops_distance_index_.at({ stop2, stop1 });
+			: result += stops_distance_index_.at({ stop2, stop1 });
 		stops_distance_index_.count({ stop2, stop1 }) ? result += stops_distance_index_.at({ stop2, stop1 })
-			                                          : result *= 2;
+			: result *= 2;
 	}
 	else {
 		stops_distance_index_.count({ stop1, stop2 }) ? result += stops_distance_index_.at({ stop1, stop2 })
-			                                          : result += stops_distance_index_.at({ stop2, stop1 });
+			: result += stops_distance_index_.at({ stop2, stop1 });
 	}
 	return result;
 }

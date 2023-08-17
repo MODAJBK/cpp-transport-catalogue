@@ -44,8 +44,32 @@ const RouteBuilder::RouteGraph& RouteBuilder::GetRouteGraph() const {
 	return route_graph_;
 }
 
+RoutingSettings RouteBuilder::GetRoutingSettings() const {
+	return routing_settings_;
+}
+
+const RouteBuilder::TcRouter& RouteBuilder::GetRouter() const {
+	return *router_ptr_;
+}
+
+void RouteBuilder::SetGraph(const RouteGraph& graph) {
+	route_graph_ = graph;
+}
+
+void RouteBuilder::SetRoutingSettings(const RoutingSettings& settings) {
+	routing_settings_ = settings;
+}
+
 void RouteBuilder::SetRouter(std::unique_ptr<RouteBuilder::TcRouter>&& router) {
 	router_ptr_ = std::move(router);
+}
+
+void RouteBuilder::SetStopToVertexId(const std::set<std::string_view> stop_names) {
+	VertexId id = 0;
+	for (const auto stop : stop_names) {
+		vertex_to_stop_[stop] = { id, (id + 1) };
+		id += 2;
+	}
 }
 
 std::optional<RouteBuilder::RouteData> RouteBuilder::BuildRouteBetweenTwoStops(std::string_view stop_from, std::string_view stop_to) const {

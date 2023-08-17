@@ -1,19 +1,37 @@
 #pragma once
 
 #include <iostream>
-#include <memory>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
+#include <set>
 
-#include "router.h"
-#include "json_reader.h"
 #include "transport_catalogue.h"
 #include "transport_router.h"
 #include "map_renderer.h"
 
-std::string CompleteMapDrawing(JsonReader&, TransportCatalogue&);
+class RequestHandler {
+public:
 
-void CompleteInputRequests(JsonReader&, TransportCatalogue&, std::istream&);
+	RequestHandler() = delete;
+	RequestHandler(const TransportCatalogue&, MapRender&, const RoutingSettings&);
+	RequestHandler(const TransportCatalogue&);
 
-void CompleteOutputRequests(JsonReader&, TransportCatalogue&, std::ostream&);
+	std::string RenderMap();
 
-void RunTransportCatalogue();
+	void BuildGraph();
+
+	void SetRender(MapRender& render);
+
+	MapRender& GetMapRender() const;
+	RouteBuilder& GetRouteBuilder();
+	const RouteBuilder& GetRouteBuilder() const;
+
+private:
+
+	const TransportCatalogue& catalogue_;
+	MapRender* render_ = nullptr;
+	RouteBuilder builder_ = {};
+
+};

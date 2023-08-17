@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package graph_serialize;
+
+message EdgeWeight {
+	double spend_time = 1;
+	int32 span_count = 2;
+	string edge_type = 3;
+}
+
+message Edge {
+    uint32 vertex_id_from = 1;
+    uint32 vertex_id_to = 2;
+    EdgeWeight weight = 3;
+}
+
+message IncidenceList {
+    repeated uint32 edges_id = 1;
+}
+
+message DirectedWeightedGraph {
+    repeated Edge edges = 1;
+    repeated IncidenceList incidence_list = 2;
+}
+
+message PrevEdge {
+    uint32 edge_id = 1;
+}
+
+message RouteInternalData {
+    EdgeWeight edge_weight = 1;
+    PrevEdge prev_edge = 2;
+}
+
+message OptRouteInternalData {
+    RouteInternalData data = 1;
+}
+
+message RoutesInternalData {
+    repeated OptRouteInternalData routes_int_data = 1;
+}
+
+message Router {
+    repeated RoutesInternalData router_data = 1;
+}

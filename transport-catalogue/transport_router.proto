@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "graph.proto";
+
+package router_serialize;
+
+message RouteSettings {
+    double bus_wait_time = 1;
+    double bus_velocity = 2;
+}
+
+message TransportRouter {
+    RouteSettings settings = 1;
+    graph_serialize.DirectedWeightedGraph graph = 2;
+    graph_serialize.Router router = 3;
+}

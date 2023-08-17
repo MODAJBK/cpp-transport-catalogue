@@ -36,26 +36,30 @@ struct EdgeWeight {
 };
 
 class RouteBuilder {
+public:
 
 	using VertexPair = std::pair<graph::VertexId, graph::VertexId>; // first - WaitVertex, second - RideVertex
 	using RouteEdge = graph::Edge<EdgeWeight>;
 	using RouteGraph = graph::DirectedWeightedGraph<EdgeWeight>;
-
-public:
-
 	using RouteData = graph::Router<EdgeWeight>::RouteInfo;
 	using TcRouter = graph::Router<EdgeWeight>;
 
-	RouteBuilder() = delete;
+	RouteBuilder() = default;
 	RouteBuilder(size_t stops_count, RoutingSettings);
 
-	const RouteGraph& BuildGraph(const TransportCatalogue&, const std::set<std::string_view>& route_names,
+	const RouteGraph& BuildGraph(const TransportCatalogue&, 
+		                         const std::set<std::string_view>& route_names,
 		                         const std::set<std::string_view>& stop_names);
 	std::optional<RouteData> BuildRouteBetweenTwoStops(std::string_view stop_from, std::string_view stop_to) const;
 
+	void SetStopToVertexId(const std::set<std::string_view> stops);
+	void SetRoutingSettings(const RoutingSettings& settings);
+	void SetGraph(const RouteGraph& graph);
 	void SetRouter(std::unique_ptr<TcRouter>&& router);
 
 	const RouteGraph& GetRouteGraph() const;
+	RoutingSettings GetRoutingSettings() const;
+	const TcRouter& GetRouter() const;
 
 private:
 

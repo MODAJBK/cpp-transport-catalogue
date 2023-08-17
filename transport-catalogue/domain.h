@@ -13,7 +13,7 @@ enum class RouteType {
 
 struct Stop {
 
-	Stop() = default;
+	Stop();
 	explicit Stop(std::string name, geo::Coordinates coordinates);
 	explicit Stop(std::string name, double latitude, double longitude);
 
@@ -21,8 +21,13 @@ struct Stop {
 
 	bool operator!=(const Stop&) const;
 
+	const int stop_id = 0;
 	std::string stop_name;
 	geo::Coordinates coordinates;
+
+private:
+
+	static inline int id_count = 0;
 
 };
 

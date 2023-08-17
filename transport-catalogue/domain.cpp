@@ -2,13 +2,19 @@
 
 using namespace geo;
 
+Stop::Stop()
+	: stop_id(id_count++) {
+}
+
 Stop::Stop(std::string name, Coordinates coordinates)
-	: stop_name(std::move(name))
+	: stop_id(id_count++)
+    , stop_name(std::move(name))
 	, coordinates(std::move(coordinates))
 {}
 
 Stop::Stop(std::string name, double latitude, double longitude)
-	: stop_name(std::move(name))
+	: stop_id(id_count++)
+	, stop_name(std::move(name))
 	, coordinates(std::move(Coordinates(latitude, longitude)))
 {}
 
